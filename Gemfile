@@ -1,10 +1,11 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
 gemspec
 
-# Compass for the dummy app
-gem 'compass', require: false
-
-group :development do
-  gem 'byebug', platforms: [:mri_21, :mri_22], require: false
+platform :rbx do
+  gem 'rubysl', '~> 2.0'
+  gem 'json', '>= 1.8.1'
+  gem 'rubysl-test-unit', '~> 2.0'
+  gem 'racc'
 end
+

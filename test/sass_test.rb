@@ -1,7 +1,6 @@
 require 'test_helper'
-require 'shellwords'
 
-class SassTest < Minitest::Test
+class SassTest < Test::Unit::TestCase
   DUMMY_PATH = 'test/dummy_sass_only'
 
   def test_font_helper
@@ -10,17 +9,15 @@ class SassTest < Minitest::Test
 
   def setup
     Dir.chdir DUMMY_PATH do
-      %x[rm -rf .sass-cache/]
       %x[bundle]
     end
-    css_path = File.join GEM_PATH, 'tmp/bootstrap-sass-only.css'
-    command  = "bundle exec ruby compile.rb #{Shellwords.escape css_path}"
-    success  = Dir.chdir DUMMY_PATH do
-      silence_stdout_if !ENV['VERBOSE'] do
+    css_path = File.join Bootstrap.gem_path, 'tmp/bootstrap-sass-only.css'
+    command = "bundle exec ruby compile.rb #{css_path}"
+    Dir.chdir DUMMY_PATH do
+      assert silence_stream(STDOUT) {
         system(command)
-      end
+      }, 'Sass-only compilation failed'
     end
-    assert success, 'Sass-only compilation failed'
     @css = File.read(css_path)
   end
 end

@@ -1,17 +1,14 @@
-lib_path = File.join(File.dirname(__FILE__), 'lib')
-$:.unshift(lib_path) unless $:.include?(lib_path)
-
-load './tasks/bower.rake'
-
 require 'rake/testtask'
-task :test do |t|
-  $: << File.expand_path('test/')
-  Dir.glob('./test/**/*_test.rb').each { |file| require file }
+Rake::TestTask.new do |t|
+  t.libs << "test"
+  t.test_files = FileList['test/*_test.rb']
+  t.verbose    = true
 end
 
 desc 'Dumps output to a CSS file for testing'
 task :debug do
   require 'sass'
+  require './lib/bootstrap-sass/sass_functions'
   path = Bootstrap.stylesheets_path
   %w(bootstrap).each do |file|
     engine = Sass::Engine.for_file("#{path}/#{file}.scss", syntax: :scss, load_paths: [path])
@@ -33,31 +30,22 @@ end
 
 desc 'Compile bootstrap-sass to tmp/ (or first arg)'
 task :compile, :css_path do |t, args|
+  lib_path = File.join(File.dirname(__FILE__), 'lib')
+  $:.unshift(lib_path) unless $:.include?(lib_path)
   require 'sass'
+  require 'bootstrap-sass/sass_functions'
   require 'term/ansicolor'
 
-  path = 'assets/stylesheets'
-  css_path = args.with_defaults(css_path: 'tmp')[:css_path]
+  path = 'vendor/assets/stylesheets'
   puts Term::ANSIColor.bold "Compiling SCSS in #{path}"
-  Dir.mkdir(css_path) unless File.directory?(css_path)
-  %w(_bootstrap bootstrap/_theme).each do |file|
-    save_path = "#{css_path}/#{file.sub(/(^|\/)?_+/, '\1').sub('/', '-')}.css"
+  %w(bootstrap bootstrap/_theme).each do |file|
+    save_path = "#{args.with_defaults(css_path: 'tmp')[:css_path]}/#{file.sub(/(^|\/)?_+/, '\1').sub('/', '-')}.css"
     puts Term::ANSIColor.cyan("  #{save_path}") + '...'
     engine    = Sass::Engine.for_file("#{path}/#{file}.scss", syntax: :scss, load_paths: [path])
     css       = engine.render
+    File.mkdir('tmp') unless File.directory?('tmp')
     File.open(save_path, 'w') { |f| f.write css }
   end
-end
-
-desc 'Start a dummy (test) Rails app server'
-task :dummy_rails do
-  require 'rack'
-  require 'term/ansicolor'
-  port = ENV['PORT'] || 9292
-  puts %Q(Starting on #{Term::ANSIColor.cyan "http://localhost:#{port}"})
-  Rack::Server.start(
-    config: 'test/dummy_rails/config.ru',
-    Port: port)
 end
 
 task default: :test

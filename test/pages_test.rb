@@ -1,7 +1,7 @@
-require 'test_helper_rails'
+require 'test_helper'
 
 class PagesTest < ActionDispatch::IntegrationTest
-  include ::DummyRailsIntegration
+  include ::IntegrationTest
 
   def test_visit_root
     visit root_path
